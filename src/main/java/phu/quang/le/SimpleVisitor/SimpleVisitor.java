@@ -139,9 +139,9 @@ public class SimpleVisitor extends NodeVisitor {
 			}
 		} else if (tag instanceof ImageTag) {
 			ImageTag it = (ImageTag) tag;
-//			System.out.println(it.getImageURL());
-			if(it.getAttribute("alt") != null) {
-
+			if(it.getAttribute("alt").equals(hero.getName()+".png")) {
+				hero.setImgUrl(it.getImageURL());
+				System.out.println("Set Hero image URL: " + hero.getImgUrl());
 			}
 		} else if (tag instanceof TableHeader) {
 			TableHeader th = (TableHeader) tag;
