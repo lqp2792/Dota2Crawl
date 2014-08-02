@@ -13,10 +13,10 @@ public class Hero {
 	private String imgUrl;
 	private String bio;
 	private String voice;
+	private HeroStat heroStat;
 	private List<Role> roles;
 	private List<Skill> skills;
-	private HeroStat heroStat;
-	private LevelStat levelStat;
+	private List<LevelStat> levelStat;
 	
 	public String getImgUrl() {
 		return imgUrl;
@@ -82,11 +82,11 @@ public class Hero {
 		this.heroStat = heroStat;
 	}
 
-	public LevelStat getLevelStat() {
+	public List<LevelStat> getLevelStat() {
 		return levelStat;
 	}
 
-	public void setLevelStat(LevelStat levelStat) {
+	public void setLevelStat(List<LevelStat> levelStat) {
 		this.levelStat = levelStat;
 	}
 }
