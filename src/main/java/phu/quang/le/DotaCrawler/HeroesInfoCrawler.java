@@ -16,6 +16,7 @@ import org.htmlparser.util.ParserException;
 import phu.quang.le.Dao.Hero;
 import phu.quang.le.Dao.HeroStat;
 import phu.quang.le.Dao.LevelStat;
+import phu.quang.le.Dao.Skill;
 import phu.quang.le.SimpleVisitor.AbilityVisitor;
 
 public class HeroesInfoCrawler {
@@ -24,6 +25,7 @@ public class HeroesInfoCrawler {
 		Hero hero = new Hero ();
 		HeroStat heroStat = new HeroStat ();
 		List<LevelStat> levelStats = new ArrayList<> ();
+		List<Skill> skills = new ArrayList<> ();
 
 		try {
 			URLConnection connection = new URL (url).openConnection ();
@@ -38,14 +40,12 @@ public class HeroesInfoCrawler {
 			NodeList infoNodeList = tableNodeList
 					.extractAllNodesThatMatch (new HasAttributeFilter ("class",
 							"infobox"));
-			System.out.println (infoNodeList.size ());
 			NodeList abilityNodeList = tableNodeList
 					.extractAllNodesThatMatch (new HasAttributeFilter ("style",
 							"border:0;padding:0;margin:0;margin-bottom:1em;"));
-			System.out.println (abilityNodeList.size ());
 			// statRelateNodeList.visitAllNodesWith(new SimpleVisitor(heroStat,
 			// hero, levelStats));
-			abilityNodeList.visitAllNodesWith (new AbilityVisitor ());
+			abilityNodeList.visitAllNodesWith (new AbilityVisitor (skills));
 		} catch (IOException e) {
 			System.err.println (e);
 		} catch (ParserException e) {
