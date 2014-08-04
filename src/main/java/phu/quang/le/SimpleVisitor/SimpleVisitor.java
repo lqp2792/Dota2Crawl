@@ -123,6 +123,9 @@ public class SimpleVisitor extends NodeVisitor {
 						break;
 					case "Damage" :
 						tokens = new StringTokenizer (presentText, "‒");
+						if(tokens.countTokens () != 2) {
+							tokens = new StringTokenizer (presentText, "-");
+						}
 						if (tokens.hasMoreTokens ()) {
 							levelStat.setStartDamage (Integer.parseInt (tokens
 									.nextToken ()));

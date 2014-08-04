@@ -18,15 +18,16 @@ import phu.quang.le.Dao.HeroStat;
 import phu.quang.le.Dao.LevelStat;
 import phu.quang.le.Dao.Skill;
 import phu.quang.le.SimpleVisitor.AbilityVisitor;
+import phu.quang.le.SimpleVisitor.SimpleVisitor;
 
 public class HeroesInfoCrawler {
 
 	public static void startCrawling (String url) {
+
 		Hero hero = new Hero ();
 		HeroStat heroStat = new HeroStat ();
 		List<LevelStat> levelStats = new ArrayList<> ();
 		List<Skill> skills = new ArrayList<> ();
-
 		try {
 			URLConnection connection = new URL (url).openConnection ();
 			connection.addRequestProperty ("User-agent",
@@ -35,16 +36,14 @@ public class HeroesInfoCrawler {
 							+ "Chrome/36.0.1985.125 Safari/537.36");
 			Parser parser = new Parser (connection);
 			NodeList tableNodeList = parser
-					.extractAllNodesThatMatch (new NodeClassFilter (
-							TableTag.class));
+					.extractAllNodesThatMatch (new NodeClassFilter (TableTag.class));
 			NodeList infoNodeList = tableNodeList
-					.extractAllNodesThatMatch (new HasAttributeFilter ("class",
-							"infobox"));
+					.extractAllNodesThatMatch (new HasAttributeFilter ("class", "infobox"));
 			NodeList abilityNodeList = tableNodeList
 					.extractAllNodesThatMatch (new HasAttributeFilter ("style",
 							"border:0;padding:0;margin:0;margin-bottom:1em;"));
-			// statRelateNodeList.visitAllNodesWith(new SimpleVisitor(heroStat,
-			// hero, levelStats));
+			infoNodeList.visitAllNodesWith (new SimpleVisitor (heroStat, hero,
+					levelStats));
 			abilityNodeList.visitAllNodesWith (new AbilityVisitor (skills));
 		} catch (IOException e) {
 			System.err.println (e);
@@ -54,7 +53,8 @@ public class HeroesInfoCrawler {
 	}
 
 	public static void main (String[] args) {
-		String url = "http://dota2.gamepedia.com/Lich";
+
+		String url = "http://dota2.gamepedia.com/Pudge";
 		startCrawling (url);
 	}
 }
