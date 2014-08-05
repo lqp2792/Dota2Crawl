@@ -28,13 +28,11 @@ public class AbilityVisitor extends NodeVisitor {
 	public StringBuffer text = new StringBuffer (100);
 
 	public AbilityVisitor (List<Skill> skills) {
-
 		this.skills = skills;
 	}
 
 	@Override
 	public void visitTag (Tag tag) {
-
 		if (tag instanceof TableTag) {
 			if (tag.getAttribute ("style").equals (
 					"border:0;padding:0;margin:0;margin-bottom:1em;")) {
@@ -42,15 +40,16 @@ public class AbilityVisitor extends NodeVisitor {
 				skill = new Skill ();
 				notes = new ArrayList<> ();
 			}
-			if (tag.getAttribute ("style")
-					.equals (
-							"width:100%;font-size:85%;line-height:100%;border-top:0px solid black;border-bottom:1px solid black;text-align:center;")) {
+			if (tag.getAttribute ("style").equals (
+					"width:100%;font-size:85%;line-height:100%;"
+							+ "border-top:0px solid black;border-bottom:1px solid black;"
+							+ "text-align:center;")) {
 				shouldGetSkillType = true;
 			}
 		} else if (tag instanceof TableHeader) {
 			if (tag.getAttribute ("style") != null) {
 				String val = tag.getAttribute ("style");
-				if(val.equals ("width:30%;") || val.equals ("width:30%")) {
+				if (val.equals ("width:30%;") || val.equals ("width:30%")) {
 					count++;
 				}
 			}
@@ -60,9 +59,9 @@ public class AbilityVisitor extends NodeVisitor {
 				shouldGetSkillInfo = true;
 			}
 			if (tag.getAttribute ("style") != null
-					&& tag.getAttribute ("style")
-							.equals (
-									"vertical-align:top;border-left:1px solid black;padding:3px 5px;")) {
+					&& tag.getAttribute ("style").equals (
+							"vertical-align:top;border-left:1px solid black;"
+									+ "padding:3px 5px;")) {
 				shouldGetSkillInfo = false;
 			}
 			if (shouldGetSkillInfo) {
@@ -90,18 +89,21 @@ public class AbilityVisitor extends NodeVisitor {
 					}
 				} else {
 					System.out.println ();
-					switch(printCount) {
-					case 0:
-						System.out.print("Ability: " + StringUtils.ltrim (ParserUtils.trimAllTags (
-								tc.getStringText (), false)));
+					switch (printCount) {
+					case 0 :
+						System.out.print ("Ability: "
+								+ StringUtils.ltrim (ParserUtils.trimAllTags (
+										tc.getStringText (), false)));
 						break;
-					case 1:
-						System.out.print("Affects: " + StringUtils.ltrim (ParserUtils.trimAllTags (
-								tc.getStringText (), false)));
+					case 1 :
+						System.out.print ("Affects: "
+								+ StringUtils.ltrim (ParserUtils.trimAllTags (
+										tc.getStringText (), false)));
 						break;
-					case 2:
-						System.out.print("Damage: " + StringUtils.ltrim (ParserUtils.trimAllTags (
-								tc.getStringText (), false)));
+					case 2 :
+						System.out.print ("Damage: "
+								+ StringUtils.ltrim (ParserUtils.trimAllTags (
+										tc.getStringText (), false)));
 						break;
 					}
 					printCount++;
@@ -126,7 +128,6 @@ public class AbilityVisitor extends NodeVisitor {
 
 	@Override
 	public void finishedParsing () {
-
 		super.finishedParsing ();
 	}
 
@@ -137,18 +138,17 @@ public class AbilityVisitor extends NodeVisitor {
 	 *            need to get information or not
 	 */
 	public void processLinkTag (Tag tag, boolean shouldGetSkillInfo) {
-
 		if (shouldGetSkillInfo) {
 			LinkTag lt = (LinkTag) tag;
 			TableColumn tableColumn = null;
 			if (lt.getAttribute ("title") != null) {
 				switch (lt.getAttribute ("title")) {
-				case "Cooldown":
+				case "Cooldown" :
 					tableColumn = (TableColumn) lt.getParent ();
 					System.out.println (ParserUtils.trimAllTags (
 							tableColumn.getStringText (), false).trim ());
 					break;
-				case "Mana":
+				case "Mana" :
 					tableColumn = (TableColumn) lt.getParent ();
 					System.out.println (ParserUtils.trimAllTags (
 							tableColumn.getStringText (), false).trim ());
@@ -174,7 +174,6 @@ public class AbilityVisitor extends NodeVisitor {
 	 * @param shouldGetSkillInfo
 	 */
 	public void processImageTag (Tag tag, boolean shouldGetSkillInfo) {
-
 		if (shouldGetSkillInfo) {
 			ImageTag it = (ImageTag) tag;
 			if (it.getParent () instanceof LinkTag) {

@@ -16,18 +16,22 @@ import org.htmlparser.util.ParserException;
 import phu.quang.le.Dao.Hero;
 import phu.quang.le.Dao.HeroStat;
 import phu.quang.le.Dao.LevelStat;
-import phu.quang.le.Dao.Skill;
 import phu.quang.le.Dao.SummonStat;
 import phu.quang.le.SimpleVisitor.HeroInfoVisitor;
 
-public class HeroesInfoCrawler {
+public class HeroInfoThread implements Runnable {
+	public String url;
+	public Hero hero = new Hero ();
+	public HeroStat heroStat = new HeroStat ();
+	public SummonStat summonStat = new SummonStat ();
+	public List<LevelStat> levelStats = new ArrayList<> (); 
+	
+	public HeroInfoThread (String url) {
+		this.url = url;
+	}
 
-	public static void startCrawling (String url) {
-		Hero hero = new Hero ();
-		HeroStat heroStat = new HeroStat ();
-		SummonStat summonStat = new SummonStat ();
-		List<LevelStat> levelStats = new ArrayList<> ();
-		List<Skill> skills = new ArrayList<> ();
+	@Override
+	public void run () {
 		try {
 			URLConnection connection = new URL (url).openConnection ();
 			connection.addRequestProperty ("User-agent",
@@ -42,24 +46,18 @@ public class HeroesInfoCrawler {
 			NodeList abilityNodeList = tableNodeList
 					.extractAllNodesThatMatch (new HasAttributeFilter ("style",
 							"border:0;padding:0;margin:0;margin-bottom:1em;"));
-			if (infoNodeList.size () == 1) {
-				infoNodeList.visitAllNodesWith (new HeroInfoVisitor (heroStat, hero,
-						levelStats));
+			if(infoNodeList.size () == 1) {
+				infoNodeList.visitAllNodesWith (new HeroInfoVisitor (heroStat, hero, levelStats));
 			}
-			if (infoNodeList.size () == 2) {
-				infoNodeList.elementAt (0).accept (
-						new HeroInfoVisitor (heroStat, hero, levelStats));
+			if(infoNodeList.size () > 1) {
+				infoNodeList.visitAllNodesWith (new HeroInfoVisitor (heroStat, hero, levelStats, summonStat));
 			}
+					
 			// abilityNodeList.visitAllNodesWith (new AbilityVisitor (skills));
 		} catch (IOException e) {
 			System.err.println (e);
 		} catch (ParserException e) {
 			System.err.println (e);
 		}
-	}
-
-	public static void main (String[] args) {
-		String url = "http://dota2.gamepedia.com/Nature%27s_Prophet";
-		startCrawling (url);
 	}
 }

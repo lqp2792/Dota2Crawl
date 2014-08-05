@@ -6,50 +6,85 @@ import java.util.StringTokenizer;
 
 import org.htmlparser.Parser;
 import org.htmlparser.Tag;
-import org.htmlparser.Text;
 import org.htmlparser.filters.NodeClassFilter;
 import org.htmlparser.tags.ImageTag;
 import org.htmlparser.tags.Span;
 import org.htmlparser.tags.TableColumn;
 import org.htmlparser.tags.TableHeader;
 import org.htmlparser.tags.TableRow;
+import org.htmlparser.tags.TableTag;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 import org.htmlparser.util.ParserUtils;
 import org.htmlparser.visitors.NodeVisitor;
-import org.jsoup.Jsoup;
 
 import phu.quang.le.Dao.Hero;
 import phu.quang.le.Dao.HeroStat;
 import phu.quang.le.Dao.LevelStat;
+import phu.quang.le.Dao.SummonStat;
 import phu.quang.le.Util.DBUtility;
+import phu.quang.le.Util.StringUtils;
 
 public class HeroInfoVisitor extends NodeVisitor {
-	public HeroStat heroStat;
+
 	public Hero hero;
+	public HeroStat heroStat;
+	public SummonStat summonStat;
 	public List<LevelStat> levelStats;
+	public int infoboxNum = 0;
 
 	public HeroInfoVisitor (HeroStat heroStat, Hero hero, List<LevelStat> levelStats) {
-
 		this.heroStat = heroStat;
 		this.hero = hero;
 		this.levelStats = levelStats;
 	}
 
+	// If this hero can summon pet
+	public HeroInfoVisitor (HeroStat heroStat, Hero hero, List<LevelStat> levelStats,
+			SummonStat summonStat) {
+		this.heroStat = heroStat;
+		this.hero = hero;
+		this.levelStats = levelStats;
+		this.summonStat = summonStat;
+	}
+
 	@Override
 	public void visitTag (Tag tag) {
+		if (tag instanceof TableTag) {
+			if (tag.getAttribute ("class") != null
+					&& tag.getAttribute ("class").equals ("infobox")) {
+				infoboxNum++;
+			}
+		} else if (tag instanceof TableRow) {
+			processTableRow (tag);
+		} else if (tag instanceof ImageTag) {
+			processImageTag (tag);
+		} else if (tag instanceof TableHeader) {
+			processTableHeader (tag);
+		}
+	}
 
-		if (tag instanceof TableRow) {
-			TableRow tr = (TableRow) tag;
-			TableColumn[] tcs = tr.getColumns ();
-			int level = 0;
-			LevelStat levelStat = null;
-			String prevText = null;
-			String presentText = null;
-			StringTokenizer tokens = null;
-			for (TableColumn tc : tcs) {
-				presentText = Jsoup.parse (tc.getStringText ()).text ();
-				if (prevText != null) {
+	/**
+	 * If input Tag is tr, then get all table column of this row. If this hero
+	 * can summon unit, we will count infobox number to know when we get hero
+	 * information, when we get summon unit information
+	 * 
+	 * @param tag
+	 *            Table Row tag tr
+	 */
+	public void processTableRow (Tag tag) {
+		TableRow tr = (TableRow) tag;
+		TableColumn[] tcs = tr.getColumns ();
+		int level = 0;
+		LevelStat levelStat = null;
+		String prevText = null;
+		String presentText = null;
+		StringTokenizer tokens = null;
+		for (TableColumn tc : tcs) {
+			presentText = ParserUtils.trimAllTags (tc.getStringText (), false);
+			presentText = StringUtils.rtrim (StringUtils.ltrim (presentText));
+			if (prevText != null) {
+				if (infoboxNum == 1) {
 					levelStat = levelStats.get (level);
 					switch (prevText) {
 					case "Movement Speed" :
@@ -103,7 +138,6 @@ public class HeroInfoVisitor extends NodeVisitor {
 						heroStat.setBaseAttackTime (Double.parseDouble (presentText));
 						break;
 					case "Hit Points" :
-
 						levelStat.setHitPoints (Integer.parseInt (presentText));
 						level++;
 						System.out.println ("Set Hit points at level: "
@@ -148,92 +182,92 @@ public class HeroInfoVisitor extends NodeVisitor {
 						break;
 					}
 				}
-				if (level == 0) {
-					prevText = presentText;
+				if (infoboxNum == 2) {
 				}
-				if (level == 3) {
-					level = 0;
-				}
+			}
+			if (level == 0) {
+				prevText = presentText;
+			}
+			if (level == 3) {
+				level = 0;
+			}
+		}
+	}
 
-			}
-		} else if (tag instanceof ImageTag) {
-			ImageTag it = (ImageTag) tag;
-			if (it.getAttribute ("alt").equals (hero.getName () + ".png")) {
-				hero.setImgUrl (it.getImageURL ());
-				System.out.println ("Set Hero image URL: " + hero.getImgUrl ());
-			}
-		} else if (tag instanceof TableHeader) {
-			TableHeader th = (TableHeader) tag;
-			String presentText = null;
-			String stat = null;
-			StringTokenizer tokens = null;
-			try {
-				Parser parser = ParserUtils.createParserParsingAnInputString (th
+	public void processImageTag (Tag tag) {
+		ImageTag it = (ImageTag) tag;
+		if (it.getAttribute ("alt").equals (hero.getName () + ".png")) {
+			hero.setImgUrl (it.getImageURL ());
+			System.out.println ("Set Hero image URL: " + hero.getImgUrl ());
+		} else if (it.getAttribute ("width").equals ("256")
+				&& it.getAttribute ("height").equals ("144")) {
+		}
+	}
+
+	public void processTableHeader (Tag tag) {
+		TableHeader th = (TableHeader) tag;
+		String presentText = null;
+		String stat = null;
+		StringTokenizer tokens = null;
+		try {
+			Parser parser = ParserUtils.createParserParsingAnInputString (th
+					.getStringText ());
+			NodeList imgNodes = parser.parse (new NodeClassFilter (ImageTag.class));
+			if (imgNodes.size () != 0) {
+				ImageTag it = (ImageTag) imgNodes.elementAt (0);
+				presentText = it.getAttribute ("alt");
+				stat = ParserUtils.trimAllTags (th.getStringText (), false);
+				tokens = new StringTokenizer (stat, "+ ");
+				switch (presentText) {
+				case "Strength" :
+					heroStat.setBeginStrength (Double.parseDouble (tokens.nextToken ()));
+					heroStat.setStrPerLevel (Double.parseDouble (tokens.nextToken ()));
+					System.out.println ("Set Beginning Strength: "
+							+ heroStat.getBeginStrength ());
+					System.out.println ("Set Strength per level: "
+							+ heroStat.getStrPerLevel ());
+					break;
+				case "Agility" :
+					heroStat.setBeginAgility (Double.parseDouble (tokens.nextToken ()));
+					heroStat.setAgiPerLevel (Double.parseDouble (tokens.nextToken ()));
+					System.out.println ("Set Beginning Agility: "
+							+ heroStat.getBeginAgility ());
+					System.out.println ("Set Agility per level: "
+							+ heroStat.getAgiPerLevel ());
+					break;
+				case "Intelligence" :
+					heroStat.setBeginIntel (Double.parseDouble (tokens.nextToken ()));
+					heroStat.setIntPerLevel (Double.parseDouble (tokens.nextToken ()));
+					System.out.println ("Set Beginning Intelligence: "
+							+ heroStat.getBeginIntel ());
+					System.out.println ("Set Intelligence per level: "
+							+ heroStat.getIntPerLevel ());
+					break;
+				}
+			} else {
+				parser = ParserUtils.createParserParsingAnInputString (th
 						.getStringText ());
-				NodeList imgNodes = parser.parse (new NodeClassFilter (ImageTag.class));
-				if (imgNodes.size () != 0) {
-					ImageTag it = (ImageTag) imgNodes.elementAt (0);
-					presentText = it.getAttribute ("alt");
-					stat = ParserUtils.trimAllTags (th.getStringText (), false);
-					tokens = new StringTokenizer (stat, "+ ");
-
-					switch (presentText) {
-					case "Strength" :
-						heroStat.setBeginStrength (Double.parseDouble (tokens
-								.nextToken ()));
-						heroStat.setStrPerLevel (Double.parseDouble (tokens.nextToken ()));
-						System.out.println ("Set Beginning Strength: "
-								+ heroStat.getBeginStrength ());
-						System.out.println ("Set Strength per level: "
-								+ heroStat.getStrPerLevel ());
-						break;
-					case "Agility" :
-						heroStat.setBeginAgility (Double.parseDouble (tokens.nextToken ()));
-						heroStat.setAgiPerLevel (Double.parseDouble (tokens.nextToken ()));
-						System.out.println ("Set Beginning Agility: "
-								+ heroStat.getBeginAgility ());
-						System.out.println ("Set Agility per level: "
-								+ heroStat.getAgiPerLevel ());
-						break;
-					case "Intelligence" :
-						heroStat.setBeginIntel (Double.parseDouble (tokens.nextToken ()));
-						heroStat.setIntPerLevel (Double.parseDouble (tokens.nextToken ()));
-						System.out.println ("Set Beginning Intelligence: "
-								+ heroStat.getBeginIntel ());
-						System.out.println ("Set Intelligence per level: "
-								+ heroStat.getIntPerLevel ());
-						break;
-					}
-
+				NodeList spanNodes = parser.parse (new NodeClassFilter (Span.class));
+				if (spanNodes.size () != 0) {
+					String level = ParserUtils.trimAllTags (th.getStringText (), false);
+					LevelStat levelStat = new LevelStat ();
+					levelStat.setLevel (Integer.parseInt (level.trim ()));
+					levelStats.add (levelStat);
+					System.out.println ("Set Level Stat: " + levelStat.getLevel ());
 				} else {
-					parser = ParserUtils.createParserParsingAnInputString (th
-							.getStringText ());
-					NodeList spanNodes = parser.parse (new NodeClassFilter (Span.class));
-					if (spanNodes.size () != 0) {
-						String level = ParserUtils.trimAllTags (th.getStringText (),
-								false);
-						LevelStat levelStat = new LevelStat ();
-						levelStat.setLevel (Integer.parseInt (level.trim ()));
-						levelStats.add (levelStat);
-						System.out.println ("Set Level Stat: " + levelStat.getLevel ());
-					} else {
-						if (hero.getName () == null) {
-							hero.setName (th.getStringText ().trim ());
-							System.out.println ("Set Hero Name: " + hero.getName ());
-						}
+					if (hero.getName () == null) {
+						hero.setName (th.getStringText ().trim ());
+						System.out.println ("Set Hero Name: " + hero.getName ());
 					}
 				}
-			} catch (ParserException | UnsupportedEncodingException e) {
-				System.err.println (e);
 			}
-		} else {
-			// System.out.print(tag.getTagName() + " ");
+		} catch (ParserException | UnsupportedEncodingException e) {
+			System.err.println (e);
 		}
 	}
 
 	@Override
 	public void finishedParsing () {
-
 		hero.setHeroStat (heroStat);
 		DBUtility.addHero (hero);
 		super.finishedParsing ();
