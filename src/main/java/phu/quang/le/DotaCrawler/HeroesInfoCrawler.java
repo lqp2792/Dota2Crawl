@@ -18,7 +18,7 @@ import phu.quang.le.Dao.HeroStat;
 import phu.quang.le.Dao.LevelStat;
 import phu.quang.le.Dao.Skill;
 import phu.quang.le.SimpleVisitor.AbilityVisitor;
-import phu.quang.le.SimpleVisitor.SimpleVisitor;
+import phu.quang.le.SimpleVisitor.HeroInfoVisitor;
 
 public class HeroesInfoCrawler {
 
@@ -42,9 +42,9 @@ public class HeroesInfoCrawler {
 			NodeList abilityNodeList = tableNodeList
 					.extractAllNodesThatMatch (new HasAttributeFilter ("style",
 							"border:0;padding:0;margin:0;margin-bottom:1em;"));
-			infoNodeList.visitAllNodesWith (new SimpleVisitor (heroStat, hero,
+			infoNodeList.visitAllNodesWith (new HeroInfoVisitor (heroStat, hero,
 					levelStats));
-			abilityNodeList.visitAllNodesWith (new AbilityVisitor (skills));
+//			abilityNodeList.visitAllNodesWith (new AbilityVisitor (skills));
 		} catch (IOException e) {
 			System.err.println (e);
 		} catch (ParserException e) {
@@ -54,7 +54,7 @@ public class HeroesInfoCrawler {
 
 	public static void main (String[] args) {
 
-		String url = "http://dota2.gamepedia.com/Pudge";
+		String url = "http://dota2.gamepedia.com/Nature%27s_Prophet";
 		startCrawling (url);
 	}
 }

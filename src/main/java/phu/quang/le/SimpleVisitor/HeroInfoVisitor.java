@@ -22,14 +22,15 @@ import org.jsoup.Jsoup;
 import phu.quang.le.Dao.Hero;
 import phu.quang.le.Dao.HeroStat;
 import phu.quang.le.Dao.LevelStat;
+import phu.quang.le.Util.DBUtility;
 
-public class SimpleVisitor extends NodeVisitor {
+public class HeroInfoVisitor extends NodeVisitor {
 	public HeroStat heroStat;
 	public Hero hero;
 	public List<LevelStat> levelStats;
 
-	public SimpleVisitor (HeroStat heroStat, Hero hero,
-			List<LevelStat> levelStats) {
+	public HeroInfoVisitor (HeroStat heroStat, Hero hero, List<LevelStat> levelStats) {
+
 		this.heroStat = heroStat;
 		this.hero = hero;
 		this.levelStats = levelStats;
@@ -37,6 +38,7 @@ public class SimpleVisitor extends NodeVisitor {
 
 	@Override
 	public void visitTag (Tag tag) {
+
 		if (tag instanceof TableRow) {
 			TableRow tr = (TableRow) tag;
 			TableColumn[] tcs = tr.getColumns ();
@@ -51,8 +53,7 @@ public class SimpleVisitor extends NodeVisitor {
 					levelStat = levelStats.get (level);
 					switch (prevText) {
 					case "Movement Speed" :
-						System.out.println ("Set Movement Speed: "
-								+ presentText);
+						System.out.println ("Set Movement Speed: " + presentText);
 						heroStat.setMoveSpeed (Integer.parseInt (presentText));
 						break;
 					case "Turn Rate" :
@@ -65,46 +66,41 @@ public class SimpleVisitor extends NodeVisitor {
 						if (tokens.hasMoreTokens ()) {
 							heroStat.setDaySightRange (Integer.parseInt (tokens
 									.nextToken ()));
-							heroStat.setNightSightRange (Integer
-									.parseInt (tokens.nextToken ()));
+							heroStat.setNightSightRange (Integer.parseInt (tokens
+									.nextToken ()));
 						}
 						break;
 					case "Attack Range" :
 						System.out.println ("Set Attack range: " + presentText);
-						heroStat.setMissileSpeed (presentText);
+						heroStat.setAttackRange (presentText);
 						break;
 					case "Missile Speed" :
-						System.out
-								.println ("Set Missile Speed: " + presentText);
+						System.out.println ("Set Missile Speed: " + presentText);
 						heroStat.setMissileSpeed (presentText);
 						break;
 					case "Attack Duration" :
-						System.out.println ("Set Attack Duration: "
-								+ presentText);
+						System.out.println ("Set Attack Duration: " + presentText);
 						tokens = new StringTokenizer (presentText, "+");
 						if (tokens.hasMoreTokens ()) {
 							heroStat.setAttackPoint (Double.parseDouble (tokens
 									.nextToken ()));
-							heroStat.setAttackBackswing (Double
-									.parseDouble (tokens.nextToken ()));
+							heroStat.setAttackBackswing (Double.parseDouble (tokens
+									.nextToken ()));
 						}
 						break;
 					case "Cast Duration" :
-						System.out
-								.println ("Set Cast Duration: " + presentText);
+						System.out.println ("Set Cast Duration: " + presentText);
 						tokens = new StringTokenizer (presentText, "+");
 						if (tokens.hasMoreTokens ()) {
 							heroStat.setCastPoint (Double.parseDouble (tokens
 									.nextToken ()));
-							heroStat.setCastBackswing (Double
-									.parseDouble (tokens.nextToken ()));
+							heroStat.setCastBackswing (Double.parseDouble (tokens
+									.nextToken ()));
 						}
 						break;
 					case "Base Attack Time" :
-						System.out.println ("Set Base Attack Time: "
-								+ presentText);
-						heroStat.setBaseAttackTime (Double
-								.parseDouble (presentText));
+						System.out.println ("Set Base Attack Time: " + presentText);
+						heroStat.setBaseAttackTime (Double.parseDouble (presentText));
 						break;
 					case "Hit Points" :
 
@@ -117,20 +113,19 @@ public class SimpleVisitor extends NodeVisitor {
 					case "Mana" :
 						levelStat.setMana (Integer.parseInt (presentText));
 						level++;
-						System.out.println ("Set Mana at level: "
-								+ levelStat.getLevel () + " is "
-								+ levelStat.getMana ());
+						System.out.println ("Set Mana at level: " + levelStat.getLevel ()
+								+ " is " + levelStat.getMana ());
 						break;
 					case "Damage" :
 						tokens = new StringTokenizer (presentText, "‒");
-						if(tokens.countTokens () != 2) {
+						if (tokens.countTokens () != 2) {
 							tokens = new StringTokenizer (presentText, "-");
 						}
 						if (tokens.hasMoreTokens ()) {
 							levelStat.setStartDamage (Integer.parseInt (tokens
 									.nextToken ()));
-							levelStat.setEndDamage (Integer.parseInt (tokens
-									.nextToken ()));
+							levelStat
+									.setEndDamage (Integer.parseInt (tokens.nextToken ()));
 						}
 						level++;
 						System.out.println ("Set Damage at level: "
@@ -142,12 +137,10 @@ public class SimpleVisitor extends NodeVisitor {
 						levelStat.setArmor (Double.parseDouble (presentText));
 						level++;
 						System.out.println ("Set Armor at level: "
-								+ levelStat.getLevel () + " is "
-								+ levelStat.getArmor ());
+								+ levelStat.getLevel () + " is " + levelStat.getArmor ());
 						break;
 					case "Attacks / Second" :
-						levelStat.setAttackSpeed (Double
-								.parseDouble (presentText));
+						levelStat.setAttackSpeed (Double.parseDouble (presentText));
 						level++;
 						System.out.println ("Set Attacks / Second at level: "
 								+ levelStat.getLevel () + " is "
@@ -175,10 +168,9 @@ public class SimpleVisitor extends NodeVisitor {
 			String stat = null;
 			StringTokenizer tokens = null;
 			try {
-				Parser parser = ParserUtils
-						.createParserParsingAnInputString (th.getStringText ());
-				NodeList imgNodes = parser.parse (new NodeClassFilter (
-						ImageTag.class));
+				Parser parser = ParserUtils.createParserParsingAnInputString (th
+						.getStringText ());
+				NodeList imgNodes = parser.parse (new NodeClassFilter (ImageTag.class));
 				if (imgNodes.size () != 0) {
 					ImageTag it = (ImageTag) imgNodes.elementAt (0);
 					presentText = it.getAttribute ("alt");
@@ -189,53 +181,45 @@ public class SimpleVisitor extends NodeVisitor {
 					case "Strength" :
 						heroStat.setBeginStrength (Double.parseDouble (tokens
 								.nextToken ()));
-						heroStat.setStrPerLevel (Double.parseDouble (tokens
-								.nextToken ()));
+						heroStat.setStrPerLevel (Double.parseDouble (tokens.nextToken ()));
 						System.out.println ("Set Beginning Strength: "
 								+ heroStat.getBeginStrength ());
 						System.out.println ("Set Strength per level: "
 								+ heroStat.getStrPerLevel ());
 						break;
 					case "Agility" :
-						heroStat.setBeginAgility (Double.parseDouble (tokens
-								.nextToken ()));
-						heroStat.setAgiPerLevel (Double.parseDouble (tokens
-								.nextToken ()));
+						heroStat.setBeginAgility (Double.parseDouble (tokens.nextToken ()));
+						heroStat.setAgiPerLevel (Double.parseDouble (tokens.nextToken ()));
 						System.out.println ("Set Beginning Agility: "
 								+ heroStat.getBeginAgility ());
 						System.out.println ("Set Agility per level: "
 								+ heroStat.getAgiPerLevel ());
 						break;
 					case "Intelligence" :
-						heroStat.setBeginIntel (Double.parseDouble (tokens
-								.nextToken ()));
-						heroStat.setIntPerLevel (Double.parseDouble (tokens
-								.nextToken ()));
+						heroStat.setBeginIntel (Double.parseDouble (tokens.nextToken ()));
+						heroStat.setIntPerLevel (Double.parseDouble (tokens.nextToken ()));
 						System.out.println ("Set Beginning Intelligence: "
 								+ heroStat.getBeginIntel ());
 						System.out.println ("Set Intelligence per level: "
 								+ heroStat.getIntPerLevel ());
 						break;
 					}
-					// System.out.println(it.getImageURL());
+
 				} else {
 					parser = ParserUtils.createParserParsingAnInputString (th
 							.getStringText ());
-					NodeList spanNodes = parser.parse (new NodeClassFilter (
-							Span.class));
+					NodeList spanNodes = parser.parse (new NodeClassFilter (Span.class));
 					if (spanNodes.size () != 0) {
-						String level = ParserUtils.trimAllTags (
-								th.getStringText (), false);
+						String level = ParserUtils.trimAllTags (th.getStringText (),
+								false);
 						LevelStat levelStat = new LevelStat ();
 						levelStat.setLevel (Integer.parseInt (level.trim ()));
 						levelStats.add (levelStat);
-						System.out.println ("Set Level Stat: "
-								+ levelStat.getLevel ());
+						System.out.println ("Set Level Stat: " + levelStat.getLevel ());
 					} else {
 						if (hero.getName () == null) {
 							hero.setName (th.getStringText ().trim ());
-							System.out.println ("Set Hero Name: "
-									+ hero.getName ());
+							System.out.println ("Set Hero Name: " + hero.getName ());
 						}
 					}
 				}
@@ -248,7 +232,10 @@ public class SimpleVisitor extends NodeVisitor {
 	}
 
 	@Override
-	public void visitStringNode (Text string) {
-		// System.out.println(string.getText());
+	public void finishedParsing () {
+
+		hero.setHeroStat (heroStat);
+		DBUtility.addHero (hero);
+		super.finishedParsing ();
 	}
 }
