@@ -14,9 +14,7 @@ import phu.quang.le.Dao.Hero;
 public class DBUtility {
 
 	public static Connection getConnection () {
-
 		Connection connection = null;
-
 		try {
 			Properties prop = new Properties ();
 			InputStream inputStream = DBUtility.class.getClassLoader ()
@@ -37,7 +35,6 @@ public class DBUtility {
 		} catch (IOException e) {
 			e.printStackTrace ();
 		}
-
 		return connection;
 	}
 
@@ -48,12 +45,10 @@ public class DBUtility {
 	 * @throws SQLException
 	 */
 	public static void closeConnection (Connection c) throws SQLException {
-
 		c.close ();
 	}
 
 	public static boolean addHero (Hero hero) {
-
 		System.out.println ("Add " + hero.getName () + " into database!");
 		Connection connection = DBUtility.getConnection ();
 		String sql = "INSERT INTO heroes VALUES (default, ?, ?, ?, ?, ?, ?, ?, ?, "
@@ -79,17 +74,37 @@ public class DBUtility {
 			pst.setDouble (17, hero.getHeroStat ().getAttackPoint ());
 			pst.setDouble (18, hero.getHeroStat ().getAttackBackswing ());
 			pst.setDouble (19, hero.getHeroStat ().getBaseAttackTime ());
-
 			pst.executeUpdate ();
 		} catch (SQLException e) {
 			System.err.println (e);
 		}
-
 		return true;
 	}
 
-	public static void main (String[] args) {
+	public static boolean insertHeroLink (String heroName, String heroIntro,
+			String heroUrl, String heroImageUrl, int type) {
+		boolean isInserted = false;
+		Connection connection = DBUtility.getConnection ();
+		String sql = "INSERT INTO heroes_link VALUES (default, ?, ?, ?, ?, ?)";
+		try {
+			PreparedStatement pst = connection.prepareStatement (sql);
+			pst.setString (1, heroName);
+			pst.setString (2, heroIntro);
+			pst.setString (3, heroUrl);
+			pst.setString (4, heroImageUrl);
+			pst.setInt (5, type);
+			int result = pst.executeUpdate ();
+			if (result != 0) {
+				System.out.println ("Inserted " + heroName);
+				isInserted = true;
+			}
+		} catch (SQLException e) {
+			System.err.println (e);
+		}
+		return isInserted;
+	}
 
+	public static void main (String[] args) {
 		Connection conn = getConnection ();
 		if (conn != null) {
 			System.out.println ("ok");
