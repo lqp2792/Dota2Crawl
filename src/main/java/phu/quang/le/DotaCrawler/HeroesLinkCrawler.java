@@ -19,6 +19,7 @@ import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class HeroesLinkCrawler {
@@ -30,6 +31,10 @@ public class HeroesLinkCrawler {
 	}
 
 	public static void startCrawling (String url) {
+		String heroName;
+		String heroUrl;
+		String heroImageUrl;
+		String heroIntro;
 		AtomicInteger id = new AtomicInteger ();
 		try {
 			Document doc = Jsoup
@@ -40,10 +45,26 @@ public class HeroesLinkCrawler {
 									+ "Chrome/36.0.1985.125 Safari/537.36")
 					.timeout (10000).get ();
 			Elements heroTables = doc.select ("table[width=100%]");
-			for(int i=0; i<heroTables.size (); i++) {
-				
+			for (int i = 0 ; i < heroTables.size () ; i++) {
+				Element heroTable = heroTables.get (i);
+				Elements heroColumns = heroTable.select ("td[width=50%]");
+				Elements heroLinks = heroTable.select (
+						"div[style=font-weight:bold;]").select ("a");
+				Elements heroImageLinks = heroTable
+						.select ("div[style=float:left; padding:8px;]");
+				for (int j = 0, n = heroLinks.size () ; j < n ; j++) {
+					Element heroLink = heroLinks.get (j);
+					Element heroColumn = heroColumns.get (j);
+					heroName = heroLink.attr ("title");
+					heroUrl = heroLink.attr ("abs:href");
+					heroImageUrl = heroImageLinks.select (
+							"img[alt=" + heroName + "]").attr ("src");
+					System.out.println (heroName);
+					System.out.println (heroImageUrl);
+					System.out.println (heroColumn.ownText ());
+					System.out.println ();
+				}
 			}
-			System.out.println (heroTables.size ());
 		} catch (IOException e) {
 			System.err.println (e);
 		}
